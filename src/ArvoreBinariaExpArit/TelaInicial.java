@@ -2,12 +2,18 @@ package ArvoreBinariaExpArit;
 
 import java.util.Scanner;
 
+
 public class TelaInicial {
+	
 	private static Scanner scanner = new Scanner(System.in);
+	public static boolean expressaoSalva = false;
+	public static ArvoreBinaria arvoreExpressao = new ArvoreBinaria();
+	public static String expressaoInfixa = "";
+	
 	public static void main(String[] args) {
 		boolean executando = true;
+		
         while (executando) {
-            limpaConsole();
         	printMenu();
             int escolha = lerEscolhaUsuario();
             switch (escolha) {
@@ -46,11 +52,6 @@ public class TelaInicial {
         
 	}
 	
-	private static void limpaConsole() {
-        System.out.print("\033[H\033[2J");
-        System.out.flush();
-    }
-	
 	public static int lerEscolhaUsuario() {
 		int escolha = scanner.nextInt();
         scanner.nextLine();  
@@ -58,20 +59,85 @@ public class TelaInicial {
 	}
 	
 	private static void enviarExpressao() {
-        System.out.print("Digite a expressão aritmética: ");
-        String expression = scanner.nextLine();
-        System.out.println("Você digitou a expressão: " + expression);
+        System.out.print("Digite a expressão aritmética na notação infixa: ");
+		expressaoInfixa = scanner.nextLine();
+        boolean expressaoValida = validarExpressao(expressaoInfixa);
+        if (expressaoValida) {
+            System.out.println("Expressao valida.");
+            expressaoSalva = true;
+        } else {
+            System.out.println("Expressao invalida.");
+            expressaoSalva = false;
+        }
     }
+	
+	private static boolean validarExpressao(String expressao) {
+		boolean caracteresValidos = expressao.matches("^[0-9+\\-*/().\\s]+$");
+		boolean parentesesCorretos = verificaParenteses(expressao);
+		boolean operadoresValidos = verificaOperadores(expressao);
+		
+		return caracteresValidos && parentesesCorretos && operadoresValidos;
+	}
+	
+	private static boolean verificaParenteses(String expressao) {
+		int contador = 0;
+		for (char c: expressao.toCharArray()) {
+			
+			if(c=='(') contador++;
+			else if (c==')') contador--;
+			
+			if(contador<0) return false;
+		}
+		return contador == 0;
+	}
+	
+	private static boolean verificaOperadores(String expressao) {
+		if (expressao.matches(".[+\\-/]{2,}.*")) {
+            return false;
+        }
+        if (expressao.matches("^[+\\-/].|.[+\\-/]$")) {
+            return false;
+        }
+        return !expressao.matches(".[^0-9()+\\-/.\\s].*");
+	}
 
     private static void criarArvoreExpressao() {
-        System.out.println("Criando árvore de expressão aritmética...");
+    	if (expressaoSalva) {
+            arvoreExpressao.construirArvore(expressaoInfixa);
+            System.out.println("Arvore de expressao binaria criada.");
+        } else {
+            System.out.println("Insira uma expressao valida primeiro.");
+        }
     }
 
     private static void mostrarArvoreExpressao() {
-        System.out.println("Exibindo árvore de expressão aritmética...");
+    	if (arvoreExpressao.raiz != null) {
+            System.out.println("\nPre-order traversal:");
+            arvoreExpressao.preOrder();
+            System.out.println("\n\nIn-order traversal:");
+            arvoreExpressao.inOrder();
+            System.out.println("\n\nPost-order traversal:");
+            arvoreExpressao.postOrder();
+            System.out.println("\n\nExibição hierárquica da árvore:");
+            printTree(arvoreExpressao.raiz, "");
+        } else {
+            System.out.println("Crie a arvore primeiro.");
+        }
+    }
+    
+    private static void printTree(TreeNode node, String indentacao) {
+        if (node == null) return;
+        System.out.println(indentacao + node);
+        printTree(node.left, indentacao + "   ");
+        printTree(node.right, indentacao + "   ");
     }
 
     private static void calcularExpressao() {
-        System.out.println("Calculando a expressão...");
+    	if (arvoreExpressao.raiz != null) {
+            float result = arvoreExpressao.obterExpressao();
+            System.out.println("\n\nResultado da expressao: " + result);
+        } else {
+            System.out.println("Crie a arvore primeiro.");
+        }
     }
 }
